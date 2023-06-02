@@ -5,6 +5,7 @@
 /obj/item/weapon/gun/smartgun
 	name = "\improper M56B smartgun"
 	desc = "The actual firearm in the 4-piece M56B Smartgun System. Essentially a heavy, mobile machinegun.\nYou may toggle firing restrictions by using a special action.\nAlt-click it to open the feed cover and allow for reloading."
+	icon = 'icons/obj/items/weapons/guns/guns_by_faction/uscm.dmi'
 	icon_state = "m56"
 	item_state = "m56"
 	fire_sound = "gun_smartgun"
@@ -18,15 +19,21 @@
 	wield_delay = WIELD_DELAY_FAST
 	aim_slowdown = SLOWDOWN_ADS_SPECIALIST
 	var/powerpack = null
+	/// Whether the smartgun drains the powerpack battery (Ignored if requires_powerpack is false)
+	var/requires_power = TRUE
+	/// Whether the smartgun requires a powerpack to be worn
+	var/requires_powerpack = TRUE
+	/// Whether the smartgun requires a harness to use
+	var/requires_harness = TRUE
 	ammo = /datum/ammo/bullet/smartgun
 	actions_types = list(
-						/datum/action/item_action/smartgun/toggle_accuracy_improvement,
-						/datum/action/item_action/smartgun/toggle_ammo_type,
-						/datum/action/item_action/smartgun/toggle_auto_fire,
-						/datum/action/item_action/smartgun/toggle_lethal_mode,
-						/datum/action/item_action/smartgun/toggle_motion_detector,
-						/datum/action/item_action/smartgun/toggle_recoil_compensation
-						)
+		/datum/action/item_action/smartgun/toggle_accuracy_improvement,
+		/datum/action/item_action/smartgun/toggle_ammo_type,
+		/datum/action/item_action/smartgun/toggle_auto_fire,
+		/datum/action/item_action/smartgun/toggle_lethal_mode,
+		/datum/action/item_action/smartgun/toggle_motion_detector,
+		/datum/action/item_action/smartgun/toggle_recoil_compensation,
+	)
 	var/datum/ammo/ammo_primary = /datum/ammo/bullet/smartgun //Toggled ammo type
 	var/datum/ammo/ammo_secondary = /datum/ammo/bullet/smartgun/armor_piercing //Toggled ammo type
 	var/iff_enabled = TRUE //Begin with the safety on.
@@ -48,8 +55,9 @@
 	indestructible = 1
 
 	attachable_allowed = list(
-						/obj/item/attachable/smartbarrel,
-						/obj/item/attachable/flashlight)
+		/obj/item/attachable/smartbarrel,
+		/obj/item/attachable/flashlight,
+	)
 
 	flags_gun_features = GUN_SPECIALIST|GUN_WIELDED_FIRING_ONLY|GUN_HAS_FULL_AUTO|GUN_FULL_AUTO_ON|GUN_FULL_AUTO_ONLY
 	gun_category = GUN_CATEGORY_HEAVY
@@ -63,6 +71,12 @@
 	MD = new(src)
 	. = ..()
 	update_icon()
+
+/obj/item/weapon/gun/smartgun/Destroy()
+	ammo_primary = null
+	ammo_secondary = null
+	QDEL_NULL(MD)
+	. = ..()
 
 /obj/item/weapon/gun/smartgun/set_gun_attachment_offsets()
 	attachable_offset = list("muzzle_x" = 33, "muzzle_y" = 16,"rail_x" = 17, "rail_y" = 18, "under_x" = 22, "under_y" = 14, "stock_x" = 22, "stock_y" = 14)
@@ -104,7 +118,7 @@
 
 /obj/item/weapon/gun/smartgun/clicked(mob/user, list/mods)
 	if(mods["alt"])
-		if(!ishuman(user))
+		if(!CAN_PICKUP(user, src))
 			return ..()
 		if(!locate(src) in list(user.get_active_hand(), user.get_inactive_hand()))
 			return TRUE
@@ -288,22 +302,16 @@
 		if(!skillcheckexplicit(user, SKILL_SPEC_WEAPONS, SKILL_SPEC_SMARTGUN) && !skillcheckexplicit(user, SKILL_SPEC_WEAPONS, SKILL_SPEC_ALL))
 			to_chat(H, SPAN_WARNING("You don't seem to know how to use \the [src]..."))
 			return FALSE
-		if(!H.wear_suit || !(H.wear_suit.flags_inventory & SMARTGUN_HARNESS))
-			to_chat(H, SPAN_WARNING("You need a harness suit to be able to fire \the [src]..."))
-			return FALSE
+		if(requires_harness)
+			if(!H.wear_suit || !(H.wear_suit.flags_inventory & SMARTGUN_HARNESS))
+				to_chat(H, SPAN_WARNING("You need a harness suit to be able to fire [src]..."))
+				return FALSE
 		if(cover_open)
 			to_chat(H, SPAN_WARNING("You can't fire \the [src] with the feed cover open! (alt-click to close)"))
 			return FALSE
 
-/obj/item/weapon/gun/smartgun/delete_bullet(obj/item/projectile/projectile_to_fire, refund = 0)
-	if(!current_mag)
-		return
-	qdel(projectile_to_fire)
-	if(refund) current_mag.current_rounds++
-	return TRUE
-
 /obj/item/weapon/gun/smartgun/unique_action(mob/user)
-	if(isobserver(usr) || isXeno(usr))
+	if(isobserver(usr) || isxeno(usr))
 		return
 	if(!powerpack)
 		link_powerpack(usr)
@@ -342,12 +350,19 @@
 		link_powerpack(usr)
 
 /obj/item/weapon/gun/smartgun/Fire(atom/target, mob/living/user, params, reflex = 0, dual_wield)
+	if(!requires_powerpack)
+		..()
+		return
+
 	if(!powerpack || (powerpack && user.back != powerpack))
 		if(!link_powerpack(user))
 			to_chat(user, SPAN_WARNING("You need a powerpack to be able to fire \the [src]..."))
 			unlink_powerpack()
 			return
 	if(powerpack)
+		if(!requires_power)
+			..()
+			return
 		var/obj/item/smartgun_powerpack/pp = user.back
 		if(istype(pp))
 			var/obj/item/cell/c = pp.pcell
@@ -358,7 +373,10 @@
 				..()
 
 
-/obj/item/weapon/gun/smartgun/proc/link_powerpack(var/mob/user)
+/obj/item/weapon/gun/smartgun/proc/link_powerpack(mob/user)
+	if(!requires_powerpack)
+		return TRUE
+
 	if(!QDELETED(user) && !QDELETED(user.back))
 		if(istype(user.back, /obj/item/smartgun_powerpack))
 			powerpack = user.back
@@ -426,7 +444,7 @@
 		long_range_cooldown = initial(long_range_cooldown)
 		MD.scan()
 
-/obj/item/weapon/gun/smartgun/proc/auto_prefire(var/warned) //To allow the autofire delay to properly check targets after waiting.
+/obj/item/weapon/gun/smartgun/proc/auto_prefire(warned) //To allow the autofire delay to properly check targets after waiting.
 	if(ishuman(loc) && (flags_item & WIELDED))
 		var/human_user = loc
 		target = get_target(human_user)
@@ -437,7 +455,7 @@
 		TAF.update_icon()
 		auto_fire()
 
-/obj/item/weapon/gun/smartgun/proc/get_target(var/mob/living/user)
+/obj/item/weapon/gun/smartgun/proc/get_target(mob/living/user)
 	var/list/conscious_targets = list()
 	var/list/unconscious_targets = list()
 	var/list/turf/path = list()
@@ -504,7 +522,7 @@
 	else if(unconscious_targets.len)
 		. = pick(unconscious_targets)
 
-/obj/item/weapon/gun/smartgun/proc/process_shot(var/mob/living/user, var/warned)
+/obj/item/weapon/gun/smartgun/proc/process_shot(mob/living/user, warned)
 	set waitfor = 0
 
 
@@ -619,7 +637,7 @@
 	..()
 
 
-/obj/item/weapon/gun/smartgun/co/proc/name_after_co(var/mob/living/carbon/human/H, var/obj/item/weapon/gun/smartgun/co/I)
+/obj/item/weapon/gun/smartgun/co/proc/name_after_co(mob/living/carbon/human/H, obj/item/weapon/gun/smartgun/co/I)
 	linked_human = H
 	RegisterSignal(linked_human, COMSIG_PARENT_QDELETING, PROC_REF(remove_idlock))
 
@@ -683,3 +701,8 @@
 /obj/item/weapon/gun/smartgun/clf/Initialize(mapload, ...)
 	. = ..()
 	MD.iff_signal = FACTION_CLF
+
+/obj/item/weapon/gun/smartgun/admin
+	requires_power = FALSE
+	requires_powerpack = FALSE
+	requires_harness = FALSE

@@ -82,8 +82,7 @@
 /obj/effect/landmark/lv624/fog_blocker,
 /turf/open/gm/coast{
 	dir = 6;
-	icon_state = "beach";
-	tag = "icon-beach (SOUTHEAST)"
+	icon_state = "beach"
 	},
 /area/lv624/ground/river/central_river)
 "as" = (
@@ -147,8 +146,7 @@
 /obj/structure/flora/bush/ausbushes/reedbush,
 /turf/open/gm/coast{
 	dir = 9;
-	icon_state = "beach";
-	tag = "icon-beach (NORTHWEST)"
+	icon_state = "beach"
 	},
 /area/lv624/ground/river/central_river)
 "aH" = (
@@ -287,10 +285,7 @@
 /turf/open/gm/grass,
 /area/lv624/ground/jungle/north_jungle)
 "cp" = (
-/obj/structure/flora/jungle/plantbot1{
-	icon_state = "alienplant1";
-	luminosity = 2
-	},
+/obj/structure/flora/jungle/alienplant1,
 /turf/open/gm/coast,
 /area/lv624/ground/river/central_river)
 "gh" = (
@@ -335,10 +330,7 @@
 	},
 /area/lv624/ground/river/central_river)
 "wu" = (
-/obj/structure/flora/jungle/plantbot1{
-	icon_state = "alienplant1";
-	luminosity = 2
-	},
+/obj/structure/flora/jungle/alienplant1,
 /turf/open/gm/river,
 /area/lv624/ground/river/central_river)
 "Bv" = (

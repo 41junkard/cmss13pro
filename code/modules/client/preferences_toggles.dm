@@ -61,7 +61,7 @@
 		if(src.mob.client.midi_silenced) return
 		if(midi_playing)
 			total_silenced++
-			message_staff("A player has silenced the currently playing midi. Total: [total_silenced] player(s).", 1)
+			message_admins("A player has silenced the currently playing midi. Total: [total_silenced] player(s).", 1)
 			src.mob.client.midi_silenced = 1
 			spawn(30 SECONDS) // Prevents message_admins() spam. Should match with the midi_playing_timer spawn() in playsound.dm
 				src.mob.client.midi_silenced = 0
@@ -183,9 +183,9 @@
 	prefs.toggles_flashing ^= FLASH_POOLSPAWN
 	prefs.save_preferences()
 	if(prefs.toggles_flashing & FLASH_POOLSPAWN)
-		to_chat(src,  SPAN_BOLDNOTICE("The icon on your taskbar will now flash when you get spawned as a pooled larva."))
+		to_chat(src,  SPAN_BOLDNOTICE("The icon on your taskbar will now flash when you get spawned as a burrowed larva."))
 	else
-		to_chat(src, SPAN_BOLDNOTICE( "The icon on your taskbar will no longer flash when you get spawned as a pooled larva."))
+		to_chat(src, SPAN_BOLDNOTICE( "The icon on your taskbar will no longer flash when you get spawned as a burrowed larva."))
 
 
 /client/verb/toggle_adminpm_flash()
@@ -274,7 +274,7 @@
 		"<a href='?src=\ref[src];action=proccall;procpath=/client/proc/toggle_vend_item_to_hand'>Toggle Vendors Vending to Hands</a><br>",
 		"<a href='?src=\ref[src];action=proccall;procpath=/client/proc/switch_item_animations'>Toggle Item Animations</a><br>",
 		"<a href='?src=\ref[src];action=proccall;procpath=/client/proc/toggle_admin_sound_types'>Toggle Admin Sound Types</a><br>",
-		"<a href='?src=\ref[src];action=proccall;procpath=/client/proc/set_eye_blur_type'>Set Eye Blur Type</a><br>"
+		"<a href='?src=\ref[src];action=proccall;procpath=/client/proc/set_eye_blur_type'>Set Eye Blur Type</a><br>",
 	)
 
 	var/dat = ""
@@ -445,6 +445,70 @@
 	if(result == "Legacy")
 		prefs.pain_overlay_pref_level = PAIN_OVERLAY_LEGACY
 		to_chat(src, SPAN_NOTICE("Your vision will now have a legacy blurring effect. This is not recommended!"))
+	prefs.save_preferences()
+
+/client/verb/toggle_tgui_say()
+	set name = "Toggle Say Input Style"
+	set category = "Preferences.UI"
+	set desc = "Toggle your Input Style"
+
+	var/result = tgui_alert(src, "Which input style do you want?", "Input Style", list("Modern", "Legacy"))
+	if(!result)
+		return
+
+	if(result == "Legacy")
+		prefs.tgui_say = FALSE
+		to_chat(src, SPAN_NOTICE("You're now using the old interface."))
+	else
+		prefs.tgui_say = TRUE
+		to_chat(src, SPAN_NOTICE("You're now using the new interface."))
+	prefs.save_preferences()
+	update_special_keybinds()
+
+/client/verb/toggle_tgui_say_light_mode()
+	set name = "Toggle Say Input Color"
+	set category = "Preferences.UI"
+	set desc = "Toggle your Input Color"
+
+	var/result = tgui_alert(src, "Which input color do you want?", "Input Style", list("Darkmode", "Lightmode"))
+	if(!result)
+		return
+	if(result == "Lightmode")
+		prefs.tgui_say_light_mode = TRUE
+		to_chat(src, SPAN_NOTICE("You're now using the say interface whitemode."))
+	else
+		prefs.tgui_say_light_mode = FALSE
+		to_chat(src, SPAN_NOTICE("You're now using the say interface whitemode."))
+	tgui_say?.load()
+	prefs.save_preferences()
+
+/client/verb/toggle_custom_cursors()
+	set name = "Toggle Custom Cursors"
+	set category = "Preferences.UI"
+	set desc = "Toggle Custom Cursors"
+
+	do_toggle_custom_cursors()
+
+/client/proc/do_toggle_custom_cursors(mob/user)
+	var/result = tgui_alert(user, "Do you want custom cursors enabled?", "Custom Cursors", list("Yes", "No"))
+	if(!result)
+		return
+	if(result == "Yes")
+		prefs.custom_cursors = TRUE
+		to_chat(src, SPAN_NOTICE("You're now using custom cursors."))
+	else
+		prefs.custom_cursors = FALSE
+		to_chat(src, SPAN_NOTICE("You're no longer using custom cursors."))
+
+/client/verb/toggle_auto_viewport_fit()
+	set name = "Toggle Auto Viewport Fit"
+	set category = "Preferences.UI"
+
+	prefs.auto_fit_viewport = !prefs.auto_fit_viewport
+	if(prefs.auto_fit_viewport)
+		to_chat(src, SPAN_NOTICE("Now auto fitting viewport."))
+	else
+		to_chat(src, SPAN_NOTICE("No longer auto fitting viewport."))
 	prefs.save_preferences()
 
 //------------ GHOST PREFERENCES ---------------------------------

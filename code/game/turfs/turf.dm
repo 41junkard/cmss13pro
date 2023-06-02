@@ -113,6 +113,11 @@
 	flags_atom &= ~INITIALIZED
 	..()
 
+/turf/vv_get_dropdown()
+	. = ..()
+	VV_DROPDOWN_OPTION(VV_HK_EXPLODE, "Trigger Explosion")
+	VV_DROPDOWN_OPTION(VV_HK_EMPULSE, "Trigger EM Pulse")
+
 /turf/ex_act(severity)
 	return 0
 
@@ -430,10 +435,10 @@
 /turf/proc/can_be_dissolved()
 	return 0
 
-/turf/proc/ceiling_debris_check(var/size = 1)
+/turf/proc/ceiling_debris_check(size = 1)
 	return
 
-/turf/proc/ceiling_debris(var/size = 1) //debris falling in response to airstrikes, etc
+/turf/proc/ceiling_debris(size = 1) //debris falling in response to airstrikes, etc
 	if(ceiling_debrised)
 		return
 
@@ -517,7 +522,7 @@
 /turf/proc/wet_floor()
 	return
 
-/turf/proc/get_cell(var/type)
+/turf/proc/get_cell(type)
 	for(var/datum/automata_cell/C in autocells)
 		if(istype(C, type))
 			return C
@@ -714,10 +719,10 @@ GLOBAL_LIST_INIT(blacklisted_automated_baseturfs, typecacheof(list(
 /// Remove all atoms except observers, landmarks, docking ports - clearing up the turf contents
 /turf/proc/empty(turf_type=/turf/open/space, baseturf_type, list/ignore_typecache, flags)
 	var/static/list/ignored_atoms = typecacheof(list(/mob/dead, /obj/effect/landmark, /obj/docking_port))
-	var/list/allowed_contents = typecache_filter_list_reverse(GetAllContentsIgnoring(ignore_typecache), ignored_atoms)
-	allowed_contents -= src
-	for(var/i in 1 to allowed_contents.len)
-		var/thing = allowed_contents[i]
+	var/list/removable_contents = typecache_filter_list_reverse(GetAllContentsIgnoring(ignore_typecache), ignored_atoms)
+	removable_contents -= src
+	for(var/i in 1 to removable_contents.len)
+		var/thing = removable_contents[i]
 		qdel(thing, force=TRUE)
 
 	if(turf_type)

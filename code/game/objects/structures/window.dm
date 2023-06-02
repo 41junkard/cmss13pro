@@ -4,7 +4,7 @@
 	icon = 'icons/turf/walls/windows.dmi'
 	icon_state = "window"
 	density = TRUE
-	anchored = 1
+	anchored = TRUE
 	layer = WINDOW_LAYER
 	flags_atom = ON_BORDER|FPRINT
 	health = 15
@@ -18,6 +18,8 @@
 	var/not_damageable = 0
 	var/not_deconstructable = 0
 	var/legacy_full = FALSE //for old fulltile windows
+
+	minimap_color = MINIMAP_FENCE
 
 ///fixes up layering on northern and southern windows, breaks fulltile windows, those shouldn't be used in the first place regardless.
 /obj/structure/window/Initialize()
@@ -40,14 +42,18 @@
 		update_nearby_icons()
 	. = ..()
 
-/obj/structure/window/initialize_pass_flags(var/datum/pass_flags_container/PF)
+/obj/structure/window/setDir(newdir)
+	. = ..()
+	update_icon()
+
+/obj/structure/window/initialize_pass_flags(datum/pass_flags_container/PF)
 	..()
 	if (PF)
 		PF.flags_can_pass_all = PASS_HIGH_OVER_ONLY|PASS_GLASS
 
 /obj/structure/window/proc/set_constructed_window(start_dir)
 	state = 0
-	anchored = 0
+	anchored = FALSE
 
 	if(start_dir)
 		setDir(start_dir)
@@ -111,7 +117,7 @@
 		if(make_hit_sound)
 			playsound(loc, 'sound/effects/Glasshit.ogg', 25, 1)
 
-/obj/structure/window/bullet_act(var/obj/item/projectile/Proj)
+/obj/structure/window/bullet_act(obj/item/projectile/Proj)
 	//Tasers and the like should not damage windows.
 	var/ammo_flags = Proj.ammo.flags_ammo_behavior | Proj.projectile_override_flags
 	if(Proj.ammo.damage_type == HALLOSS || Proj.damage <= 0 || ammo_flags == AMMO_ENERGY)
@@ -170,7 +176,7 @@
 	if(!not_damageable) //Impossible to destroy
 		health = max(0, health - tforce)
 		if(health <= 7 && !reinf && !static_frame)
-			anchored = 0
+			anchored = FALSE
 			update_nearby_icons()
 			step(src, get_dir(AM, src))
 	healthcheck(user = AM.launch_metadata.thrower)
@@ -215,7 +221,7 @@
 
 /obj/structure/window/attackby(obj/item/W, mob/living/user)
 	if(istype(W, /obj/item/grab) && get_dist(src, user) < 2)
-		if(isXeno(user)) return
+		if(isxeno(user)) return
 		var/obj/item/grab/G = W
 		if(istype(G.grabbed_thing, /mob/living))
 			var/mob/living/M = G.grabbed_thing
@@ -282,7 +288,7 @@
 		if(!not_damageable) //Impossible to destroy
 			health -= W.force
 			if(health <= 7  && !reinf && !static_frame && !not_deconstructable)
-				anchored = 0
+				anchored = FALSE
 				update_nearby_icons()
 				step(src, get_dir(user, src))
 		healthcheck(1, 1, 1, user, W)
@@ -493,11 +499,16 @@
 	relativewall_neighbours()
 
 /obj/structure/window/framed/Destroy()
-	for(var/obj/effect/alien/weeds/weedwall/window/WW in loc)
-		qdel(WW)
+	for(var/obj/effect/alien/weeds/weedwall/window/found_weedwall in get_turf(src))
+		qdel(found_weedwall)
+	var/list/turf/cardinal_neighbors = list(get_step(src, NORTH), get_step(src, SOUTH), get_step(src, EAST), get_step(src, WEST))
+	for(var/turf/cardinal_turf as anything in cardinal_neighbors)
+		for(var/obj/structure/bed/nest/found_nest in cardinal_turf)
+			if(found_nest.dir == get_dir(found_nest, src))
+				qdel(found_nest) //nests are built on walls, no walls, no nest
 	. = ..()
 
-/obj/structure/window/framed/initialize_pass_flags(var/datum/pass_flags_container/PF)
+/obj/structure/window/framed/initialize_pass_flags(datum/pass_flags_container/PF)
 	..()
 	if (PF)
 		PF.flags_can_pass_all = PASS_GLASS
@@ -822,17 +833,17 @@
 	desc = "A glass window with a special rod matrix inside a wall frame. This one has an automatic shutter system to prevent any atmospheric breach."
 	health = 200
 	//icon_state = "rwindow0_debug" //Uncomment to check hull in the map editor
-	var/triggered = 0 //indicates if the shutters have already been triggered
+	var/triggered = FALSE //indicates if the shutters have already been triggered
 
 /obj/structure/window/framed/prison/reinforced/hull/Destroy()
 	spawn_shutters()
 	.=..()
 
-/obj/structure/window/framed/prison/reinforced/hull/proc/spawn_shutters(var/from_dir = 0)
+/obj/structure/window/framed/prison/reinforced/hull/proc/spawn_shutters(from_dir = 0)
 	if(triggered)
 		return
-	else
-		triggered = 1
+
+	triggered = TRUE
 	for(var/direction in cardinal)
 		if(direction == from_dir) continue //doesn't check backwards
 		for(var/obj/structure/window/framed/prison/reinforced/hull/W in get_step(src,direction) )
@@ -843,8 +854,7 @@
 			P.setDir(SOUTH)
 		else
 			P.setDir(EAST)
-	spawn(0)
-		P.close()
+	P.close()
 
 /obj/structure/window/framed/prison/cell
 	name = "cell window"
@@ -912,7 +922,7 @@
 	spawn_shutters()
 	.=..()
 
-/obj/structure/window/framed/corsat/hull/proc/spawn_shutters(var/from_dir = 0)
+/obj/structure/window/framed/corsat/hull/proc/spawn_shutters(from_dir = 0)
 	if(triggered)
 		return
 

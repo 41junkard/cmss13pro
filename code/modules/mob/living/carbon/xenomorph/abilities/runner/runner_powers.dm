@@ -1,5 +1,5 @@
 /datum/action/xeno_action/activable/runner_skillshot/use_ability(atom/A)
-	var/mob/living/carbon/Xenomorph/X = owner
+	var/mob/living/carbon/xenomorph/X = owner
 	if (!istype(X))
 		return
 
@@ -29,7 +29,7 @@
 
 
 /datum/action/xeno_action/activable/acider_acid/use_ability(atom/A)
-	var/mob/living/carbon/Xenomorph/X = owner
+	var/mob/living/carbon/xenomorph/X = owner
 	if(!istype(A, /obj/item) && !istype(A, /obj/structure/) && !istype(A, /obj/vehicle/multitile))
 		to_chat(X, SPAN_XENOHIGHDANGER("Can only melt barricades and items!"))
 		return
@@ -45,7 +45,7 @@
 		X.corrosive_acid(E,acid_type,0)
 	..()
 
-/mob/living/carbon/Xenomorph/Runner/corrosive_acid(atom/O, acid_type, plasma_cost)
+/mob/living/carbon/xenomorph/runner/corrosive_acid(atom/O, acid_type, plasma_cost)
 	if (mutation_type != RUNNER_ACIDER)
 		..(O, acid_type, plasma_cost)
 		return
@@ -147,7 +147,7 @@
 
 
 /datum/action/xeno_action/activable/acider_for_the_hive/use_ability(atom/A)
-	var/mob/living/carbon/Xenomorph/X = owner
+	var/mob/living/carbon/xenomorph/X = owner
 
 	if(!istype(X))
 		return
@@ -194,16 +194,21 @@
 	X.say(";FOR THE HIVE!!!")
 
 /datum/action/xeno_action/activable/acider_for_the_hive/proc/cancel_ability()
-	var/mob/living/carbon/Xenomorph/X = owner
+	var/mob/living/carbon/xenomorph/xeno = owner
 
-	if(!istype(X))
+	if(!istype(xeno))
 		return
-	var/datum/behavior_delegate/runner_acider/BD = X.behavior_delegate
-	if(!istype(BD))
+	var/datum/behavior_delegate/runner_acider/behavior = xeno.behavior_delegate
+	if(!istype(behavior))
 		return
 
-	BD.caboom_trigger = FALSE
-	X.color = null
-	X.SetLuminosity(0)
-	BD.modify_acid(-BD.max_acid / 4)
-	to_chat(X, SPAN_XENOWARNING("You remove all your explosive acid before it combusted."))
+	behavior.caboom_trigger = FALSE
+	xeno.color = null
+	xeno.SetLuminosity(0)
+	behavior.modify_acid(-behavior.max_acid / 4)
+
+	// Done this way rather than setting to 0 in case something else slowed us
+	// -Original amount set - (time exploding + timer inaccuracy) * how much gets removed per tick / 2
+	xeno.adjust_effect(behavior.caboom_timer * -2 - (behavior.caboom_timer - behavior.caboom_left + 2) * xeno.life_slow_reduction * 0.5, SUPERSLOW)
+
+	to_chat(xeno, SPAN_XENOWARNING("You remove all your explosive acid before it combusted."))

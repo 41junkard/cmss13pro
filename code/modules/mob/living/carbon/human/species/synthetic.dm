@@ -31,7 +31,7 @@
 	mob_flags = KNOWS_TECHNOLOGY
 	flags = IS_WHITELISTED|NO_BREATHE|NO_CLONE_LOSS|NO_BLOOD|NO_POISON|IS_SYNTHETIC|NO_CHEM_METABOLIZATION|NO_NEURO|HAS_UNDERWEAR
 
-	blood_color = "#EEEEEE"
+	blood_color = BLOOD_COLOR_SYNTHETIC
 
 	has_organ = list(
 		"heart" = /datum/internal_organ/heart/prosthetic,
@@ -40,11 +40,10 @@
 
 	knock_down_reduction = 5
 	stun_reduction = 5
-
-	acid_blood_dodge_chance = 35
+	acid_blood_dodge_chance = 25
 
 	inherent_verbs = list(
-		/mob/living/carbon/human/synthetic/proc/toggle_HUD
+		/mob/living/carbon/human/synthetic/proc/toggle_HUD,
 	)
 
 /datum/species/synthetic/handle_post_spawn(mob/living/carbon/human/H)
@@ -52,7 +51,7 @@
 	GLOB.alive_human_list -= H
 	return ..()
 
-/datum/species/synthetic/apply_signals(var/mob/living/carbon/human/H)
+/datum/species/synthetic/apply_signals(mob/living/carbon/human/H)
 	RegisterSignal(H, COMSIG_HUMAN_IMPREGNATE, PROC_REF(cancel_impregnate), TRUE)
 
 /datum/species/synthetic/proc/cancel_impregnate(datum/source)
@@ -90,7 +89,7 @@
 	stun_reduction = 3.5
 
 	inherent_verbs = list(
-		/mob/living/carbon/human/proc/toggle_inherent_nightvison
+		/mob/living/carbon/human/proc/toggle_inherent_nightvison,
 	)
 
 /datum/species/synthetic/colonial/colonial_gen_two
@@ -111,7 +110,7 @@
 	name = SYNTH_WORKING_JOE
 	name_plural = "Working Joes"
 	uses_ethnicity = FALSE
-	mob_inherent_traits = list(TRAIT_SUPER_STRONG, TRAIT_INTENT_EYES)
+	mob_inherent_traits = list(TRAIT_SUPER_STRONG, TRAIT_INTENT_EYES, TRAIT_EMOTE_CD_EXEMPT)
 
 	hair_color = "#000000"
 	icobase = 'icons/mob/humans/species/r_synthetic.dmi'
@@ -133,8 +132,8 @@
 
 	default_lighting_alpha = LIGHTING_PLANE_ALPHA_VISIBLE // we don't want combat synths to run around in the dark
 
-	knock_down_reduction = 5.0
-	stun_reduction = 5.0
+	knock_down_reduction = 5
+	stun_reduction = 5
 
 	inherent_verbs = null
 
@@ -147,4 +146,4 @@
 
 	bloodsplatter_type = /obj/effect/temp_visual/dir_setting/bloodsplatter/human
 
-	blood_color = "#A10808"
+	blood_color = BLOOD_COLOR_HUMAN

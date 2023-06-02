@@ -28,7 +28,13 @@
 
 	behavior_delegate_type = /datum/behavior_delegate/praetorian_base
 
-/mob/living/carbon/Xenomorph/Praetorian
+	minimum_evolve_time = 15 MINUTES
+
+	minimap_icon = "praetorian"
+
+	royal_caste = TRUE
+
+/mob/living/carbon/xenomorph/praetorian
 	caste_type = XENO_CASTE_PRAETORIAN
 	name = XENO_CASTE_PRAETORIAN
 	desc = "A huge, looming beast of an alien."

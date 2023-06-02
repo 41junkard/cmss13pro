@@ -11,7 +11,7 @@
 	var/html_link = ""
 	var/window_size = "1280x720"
 
-/obj/item/map/attack_self(var/mob/user) //Open the map
+/obj/item/map/attack_self(mob/user) //Open the map
 	..()
 	user.visible_message(SPAN_NOTICE("[user] opens the [src.name]. "))
 	initialize_map()
@@ -23,8 +23,11 @@
 	var/wikiurl = CONFIG_GET(string/wikiurl)
 	if(wikiurl)
 		dat = {"
+				<!DOCTYPE html>
 				<html>
 				<head>
+					<meta http-equiv="X-UA-Compatible" content="IE=edge">
+					<meta charset="utf-8">
 					<style>
 						img {
 							display: none;
@@ -51,7 +54,7 @@
 
 				</html>
 			"}
-	show_browser(usr, dat, name, "map", "size=[window_size]")
+	show_browser(usr, dat, name, "papermap", "size=[window_size]")
 
 /obj/item/map/lazarus_landing_map
 	name = "\improper Lazarus Landing Map"

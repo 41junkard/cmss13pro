@@ -109,10 +109,12 @@ DEFINES in setup.dm, referenced here.
 			//   \\
 //----------------------------------------------------------
 
-/obj/item/weapon/gun/clicked(var/mob/user, var/list/mods)
+/obj/item/weapon/gun/clicked(mob/user, list/mods)
 	if (mods["alt"])
+		if(!CAN_PICKUP(user, src))
+			return ..()
 		toggle_gun_safety()
-		return 1
+		return TRUE
 	return (..())
 
 /obj/item/weapon/gun/mob_can_equip(mob/user)
@@ -140,10 +142,6 @@ As sniper rifles have both and weapon mods can change them as well. ..() deals w
 */
 /obj/item/weapon/gun/dropped(mob/user)
 	. = ..()
-
-	stop_aim()
-	if (user && user.client)
-		user.update_gun_icons()
 
 	turn_off_light(user)
 
@@ -208,20 +206,25 @@ As sniper rifles have both and weapon mods can change them as well. ..() deals w
 				FACTION_MERCENARY,
 				FACTION_FREELANCER,
 			) return TRUE
+
+		for(var/faction in user.faction_group)
+			if(faction in FACTION_LIST_WY)
+				return TRUE
+
 		if(user.faction in FACTION_LIST_WY)
 			return TRUE
 
 	to_chat(user, SPAN_WARNING("[src] flashes a warning sign indicating unauthorized use!"))
 
 // Checks whether there is anything to put your harness
-/obj/item/weapon/gun/proc/retrieval_check(var/mob/living/carbon/human/user, var/retrieval_slot)
+/obj/item/weapon/gun/proc/retrieval_check(mob/living/carbon/human/user, retrieval_slot)
 	if(retrieval_slot == WEAR_J_STORE)
 		var/obj/item/suit = user.wear_suit
 		if(!istype(suit, /obj/item/clothing/suit/storage/marine))
 			return FALSE
 	return TRUE
 
-/obj/item/weapon/gun/proc/retrieve_to_slot(var/mob/living/carbon/human/user, var/retrieval_slot)
+/obj/item/weapon/gun/proc/retrieve_to_slot(mob/living/carbon/human/user, retrieval_slot)
 	if (!loc || !user)
 		return FALSE
 	if (!isturf(loc))
@@ -245,7 +248,7 @@ As sniper rifles have both and weapon mods can change them as well. ..() deals w
 	to_chat(user, SPAN_NOTICE(message))
 	return TRUE
 
-/obj/item/weapon/gun/proc/handle_retrieval(mob/living/carbon/human/user, var/retrieval_slot)
+/obj/item/weapon/gun/proc/handle_retrieval(mob/living/carbon/human/user, retrieval_slot)
 	if (!ishuman(user))
 		return
 	if (!retrieval_check(user, retrieval_slot))
@@ -254,9 +257,6 @@ As sniper rifles have both and weapon mods can change them as well. ..() deals w
 
 /obj/item/weapon/gun/attack_self(mob/user)
 	..()
-	if (target)
-		lower_aim()
-		return
 
 	//There are only two ways to interact here.
 	if(flags_item & TWOHANDED)
@@ -275,7 +275,7 @@ As sniper rifles have both and weapon mods can change them as well. ..() deals w
 
 	addtimer(CALLBACK(src, PROC_REF(sling_return), user), 3, TIMER_UNIQUE|TIMER_OVERRIDE)
 
-/obj/item/weapon/gun/proc/sling_return(var/mob/living/carbon/human/user)
+/obj/item/weapon/gun/proc/sling_return(mob/living/carbon/human/user)
 	if (!loc || !user)
 		return
 	if (!isturf(loc))
@@ -458,10 +458,10 @@ As sniper rifles have both and weapon mods can change them as well. ..() deals w
 		overlays += gun_image
 	else attachable_overlays[slot] = null
 
-/obj/item/weapon/gun/proc/x_offset_by_attachment_type(var/attachment_type)
+/obj/item/weapon/gun/proc/x_offset_by_attachment_type(attachment_type)
 	return 0
 
-/obj/item/weapon/gun/proc/y_offset_by_attachment_type(var/attachment_type)
+/obj/item/weapon/gun/proc/y_offset_by_attachment_type(attachment_type)
 	return 0
 
 /obj/item/weapon/gun/proc/update_mag_overlay()
@@ -525,7 +525,7 @@ As sniper rifles have both and weapon mods can change them as well. ..() deals w
 
 
 
-/mob/living/carbon/human/proc/can_unholster_from_storage_slot(var/obj/item/storage/slot)
+/mob/living/carbon/human/proc/can_unholster_from_storage_slot(obj/item/storage/slot)
 	if(isnull(slot))
 		return FALSE
 	if(slot == shoes)//Snowflakey check for shoes and uniform
@@ -554,14 +554,14 @@ As sniper rifles have both and weapon mods can change them as well. ..() deals w
 	return FALSE
 
 //For the holster hotkey
-/mob/living/silicon/robot/verb/holster_verb(var/unholster_number_offset = 1 as num)
+/mob/living/silicon/robot/verb/holster_verb(unholster_number_offset = 1 as num)
 	set name = "holster"
-	set hidden = 1
+	set hidden = TRUE
 	uneq_active()
 
-/mob/living/carbon/human/verb/holster_verb(var/unholster_number_offset = 1 as num)
+/mob/living/carbon/human/verb/holster_verb(unholster_number_offset = 1 as num)
 	set name = "holster"
-	set hidden = 1
+	set hidden = TRUE
 	if(usr.is_mob_incapacitated(TRUE) || usr.is_mob_restrained())
 		to_chat(src, SPAN_WARNING("You can't draw a weapon in your current state."))
 		return
@@ -668,7 +668,7 @@ As sniper rifles have both and weapon mods can change them as well. ..() deals w
 	playsound(src, 'sound/handling/attachment_remove.ogg', 15, 1, 4)
 	update_icon()
 
-/obj/item/weapon/gun/proc/toggle_burst(var/mob/user)
+/obj/item/weapon/gun/proc/toggle_burst(mob/user)
 	//Burst of 1 doesn't mean anything. The weapon will only fire once regardless.
 	//Just a good safety to have all weapons that can equip a scope with 1 burst_amount.
 	if(burst_amount < 2 && !(flags_gun_features & GUN_HAS_FULL_AUTO))
@@ -814,10 +814,10 @@ As sniper rifles have both and weapon mods can change them as well. ..() deals w
 		return
 
 	flags_gun_features ^= GUN_TRIGGER_SAFETY
-	gun_safety_message(usr)
+	gun_safety_handle(usr)
 
 
-/obj/item/weapon/gun/proc/gun_safety_message(var/mob/user)
+/obj/item/weapon/gun/proc/gun_safety_handle(mob/user)
 	to_chat(user, SPAN_NOTICE("You toggle the safety [SPAN_BOLD(flags_gun_features & GUN_TRIGGER_SAFETY ? "on" : "off")]."))
 	playsound(user, 'sound/weapons/handling/safety_toggle.ogg', 25, 1)
 
@@ -931,3 +931,19 @@ As sniper rifles have both and weapon mods can change them as well. ..() deals w
 	if(slot != WEAR_L_HAND && slot != WEAR_R_HAND)
 		return FALSE
 	return TRUE
+
+/**
+ * Returns one of the two override values if either are null, preferring the argument value.
+ * Otherwise, returns TRUE if it is in a civilian usable category (Handguns or SMGs), FALSE if it is not.
+ */
+/obj/item/weapon/gun/proc/is_civilian_usable(mob/user, arg_override)
+	if(!isnull(arg_override))
+		return arg_override
+
+	if(!isnull(civilian_usable_override))
+		return civilian_usable_override
+
+	if(gun_category in UNTRAINED_USABLE_CATEGORIES)
+		return TRUE
+
+	return FALSE

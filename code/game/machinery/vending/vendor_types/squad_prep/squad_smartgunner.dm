@@ -8,7 +8,6 @@ GLOBAL_LIST_INIT(cm_vending_gear_smartgun, list(
 		list("M56 Smartgun Drum", 15, /obj/item/ammo_magazine/smartgun, null, VENDOR_ITEM_RECOMMENDED),
 
 		list("SMARTGUN EXTRA UTILITIES (CHOOSE 1)", 0, null, null, null),
-		list("Burst Fire Assembly", 0, /obj/item/attachable/burstfire_assembly, MARINE_CAN_BUY_ARMOR, VENDOR_ITEM_REGULAR),
 		list("High-Capacity Power Cell", 0, /obj/item/cell/high, MARINE_CAN_BUY_ARMOR, VENDOR_ITEM_RECOMMENDED),
 
 		list("GUN ATTACHMENTS (CHOOSE 1)", 0, null, null, null),
@@ -57,7 +56,7 @@ GLOBAL_LIST_INIT(cm_vending_gear_smartgun, list(
 	vendor_role = list(JOB_SQUAD_SMARTGUN)
 	req_access = list(ACCESS_MARINE_SMARTPREP)
 
-/obj/structure/machinery/cm_vending/gear/smartgun/get_listed_products(var/mob/user)
+/obj/structure/machinery/cm_vending/gear/smartgun/get_listed_products(mob/user)
 	return GLOB.cm_vending_gear_smartgun
 
 //------------CLOTHING VENDOR---------------
@@ -69,7 +68,7 @@ GLOBAL_LIST_INIT(cm_vending_clothing_smartgun, list(
 		list("Gloves", 0, /obj/item/clothing/gloves/marine, MARINE_CAN_BUY_GLOVES, VENDOR_ITEM_MANDATORY),
 		list("Headset", 0, /obj/item/device/radio/headset/almayer/marine, MARINE_CAN_BUY_EAR, VENDOR_ITEM_MANDATORY),
 		list("Helmet", 0, /obj/item/clothing/head/helmet/marine, MARINE_CAN_BUY_HELMET, VENDOR_ITEM_MANDATORY),
-		list("MRE", 0, /obj/item/storage/box/MRE, MARINE_CAN_BUY_MRE, VENDOR_ITEM_MANDATORY),
+		list("Field Kit", 0, /obj/effect/spawner/field_kit, MARINE_CAN_BUY_MRE, VENDOR_ITEM_MANDATORY),
 
 		list("BELT", 0, null, null, null),
 		list("M802 Smartgunner Sidearm Belt", 0, /obj/item/storage/belt/gun/smartgunner/full, MARINE_CAN_BUY_BELT, VENDOR_ITEM_MANDATORY),
@@ -107,7 +106,7 @@ GLOBAL_LIST_INIT(cm_vending_clothing_smartgun, list(
 	req_access = list(ACCESS_MARINE_SMARTPREP)
 	vendor_role = list(JOB_SQUAD_SMARTGUN)
 
-/obj/structure/machinery/cm_vending/clothing/smartgun/get_listed_products(var/mob/user)
+/obj/structure/machinery/cm_vending/clothing/smartgun/get_listed_products(mob/user)
 	return GLOB.cm_vending_clothing_smartgun
 
 /obj/structure/machinery/cm_vending/clothing/smartgun/alpha
